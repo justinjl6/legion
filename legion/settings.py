@@ -1,3 +1,4 @@
+################################################################################
 """
 Django settings for legion project.
 
@@ -10,24 +11,48 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
+
+################################################################################
+# Import required modules
+
 import os
-
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+import configparser
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
+################################################################################
+# Set up directories and open config file
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = ')2&7t&5sj5vs%6wclj1btyio#bylts8)mn&-q%gln97)w_%^79'
+BASE_DIR    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CONF_DIR    = '/etc/legion'
+CONF_FILE   = os.path.join( CONF_DIR, 'django.cfg' )
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+config = configparser.ConfigParser()
+config.read( CONF_FILE )
 
 
+################################################################################
+# Some django settings will be read from the config file
+
+# Main settings
+DEBUG           = config.get( 'main', 'debug' )
+SECRET_KEY      = config.get( 'main', 'secret_key' )
+ALLOWED_HOSTS   = config.get( 'main', 'allowed_hosts' )
+
+# Email settings
+DEFAULT_FROM_EMAIL      = config.get( 'mail', 'default_from_email' )
+EMAIL_HOST              = config.get( 'mail', 'email_host' )
+EMAIL_HOST_PASSWORD     = config.get( 'mail', 'email_host_password' )
+EMAIL_HOST_USER         = config.get( 'mail', 'email_host_user' )
+EMAIL_PORT              = config.get( 'mail', 'email_port' )
+EMAIL_SUBJECT_PREFIX    = config.get( 'mail', 'email_subject_prefix' )
+EMAIL_USE_TLS           = config.get( 'mail', 'email_use_tls' )
+EMAIL_USE_SSL           = config.get( 'mail', 'email_use_ssl' )
+EMAIL_TIMEOUT           = config.get( 'mail', 'email_timeout' )
+SERVER_EMAIL            = config.get( 'mail', 'server_email' )
+
+
+
+################################################################################
 # Application definition
 
 INSTALLED_APPS = [
@@ -71,17 +96,32 @@ TEMPLATES = [
 WSGI_APPLICATION = 'legion.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/1.9/ref/settings/#databases
+################################################################################
+# Database configuration
 
-DATABASES = {
-    'default': {
+DATABASE_BACKEND = config.get( 'main', 'database' )
+
+if ( DATABASE_BACKEND == 'sqlite' ):
+    DATABASE_DEFAULT = {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'NAME'  : config.get( 'sqlite', 'name' ),
     }
+elif ( DATABASE_BACKEND == 'mysql' ):
+    DATABASE_DEFAULT = {
+        'ENGINE'    : 'django.db.backends.mysql',
+        'NAME'      : config.get( 'mysql', 'name' ),
+        'USER'      : config.get( 'mysql', 'user' ),
+        'PASSWORD'  : config.get( 'mysql', 'password' ),
+        'HOST'      : config.get( 'mysql', 'host' ),
+        'PORT'      : config.get( 'mysql', 'port' ),
+    }
+    
+DATABASES = {
+    'default': DATABASE_DEFAULT
 }
 
 
+################################################################################
 # Password validation
 # https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
 
@@ -101,6 +141,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+################################################################################
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
 
@@ -115,7 +156,13 @@ USE_L10N = True
 USE_TZ = True
 
 
+###############################################################################G
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+################################################################################
+################################################################################
+
